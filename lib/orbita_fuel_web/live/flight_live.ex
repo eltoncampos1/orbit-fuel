@@ -21,94 +21,164 @@ defmodule OrbitaFuelWeb.FlightLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div id="flight-form-container">
-      <.form id="flight-form" for={@form} phx-change="validate">
-        <.input
-          field={@form[:mass]}
-          type="number"
-          label="Spacecraft Mass"
-          phx-debounce="300"
-        />
-
-        <div id="steps-list">
-          <div
-            :for={{step, idx} <- Enum.with_index(@steps)}
-            id={"step-#{step.id}"}
-            class="step-row"
-          >
-            <span class="step-number">{idx + 1}</span>
-            <select
-              phx-change="update_step"
-              phx-value-id={step.id}
-              phx-value-field="action"
-            >
-              <option value="launch" selected={step.action == :launch}>Launch</option>
-              <option value="land" selected={step.action == :land}>Land</option>
-            </select>
-            <select
-              phx-change="update_step"
-              phx-value-id={step.id}
-              phx-value-field="planet"
-            >
-              <option value="earth" selected={step.planet == :earth}>Earth</option>
-              <option value="moon" selected={step.planet == :moon}>Moon</option>
-              <option value="mars" selected={step.planet == :mars}>Mars</option>
-            </select>
-            <button
-              type="button"
-              phx-click="remove_step"
-              phx-value-id={step.id}
-              disabled={length(@steps) == 1}
-            >
-              X
-            </button>
-          </div>
+    <div class="min-h-screen bg-[#0a0f1e] text-white flex flex-col">
+      <%!-- Header --%>
+      <header class="flex items-center justify-between px-8 py-4 border-b border-white/10">
+        <div class="flex items-center gap-3">
+          <.icon name="hero-rocket-launch" class="size-7 text-indigo-400" />
+          <span class="text-xl font-bold tracking-widest text-white">ORBITAFUEL</span>
+          <span class="text-sm text-gray-400 ml-2">Interplanetary Fuel Calculator</span>
         </div>
+        <span class="text-xs font-semibold text-indigo-300 tracking-widest uppercase">NASA Challenge</span>
+      </header>
 
-        <div id="staging-row">
-          <label>Add next step:</label>
-          <select phx-change="stage_next_step" phx-value-field="action">
-            <option value="launch" selected={@next_step.action == :launch}>Launch</option>
-            <option value="land" selected={@next_step.action == :land}>Land</option>
-          </select>
-          <select phx-change="stage_next_step" phx-value-field="planet">
-            <option value="earth" selected={@next_step.planet == :earth}>Earth</option>
-            <option value="moon" selected={@next_step.planet == :moon}>Moon</option>
-            <option value="mars" selected={@next_step.planet == :mars}>Mars</option>
-          </select>
-          <button type="button" phx-click="add_step">+ Add Step</button>
-        </div>
-
-        <div id="presets">
-          <button type="button" phx-click="load_preset" phx-value-name="apollo_11">Apollo 11</button>
-          <button type="button" phx-click="load_preset" phx-value-name="mars_mission">Mars Mission</button>
-          <button type="button" phx-click="load_preset" phx-value-name="passenger_ship">Passenger Ship</button>
-        </div>
-      </.form>
-
-      <div id="result-panel">
-        <div :if={is_nil(@result)} id="empty-state">
-          Enter a mass and build your flight path to see the fuel breakdown.
-        </div>
-        <div :if={not is_nil(@result)}>
-          <div
-            :for={sr <- @result.step_results}
-            id={"step-result-#{sr.step.id}"}
-            class="step-card"
-          >
-            <div class="step-header">
-              Step {sr.idx + 1} · {label_action(sr.step.action)} — {label_planet(sr.step.planet)}
-            </div>
-            <div class="step-chain" id={"chain-#{sr.step.id}"}>
-              <div :for={{fuel, i} <- Enum.with_index(sr.chain)}>
-                {if i == 0, do: format_number(fuel), else: "+ #{format_number(fuel)}"}
+      <div class="flex flex-1 overflow-hidden">
+        <%!-- Left panel: mission setup --%>
+        <div class="w-full max-w-lg p-8 border-r border-white/10 overflow-y-auto flex flex-col gap-6">
+          <.form id="flight-form" for={@form} phx-change="validate">
+            <%!-- Mass input --%>
+            <div class="mb-6">
+              <label class="block text-sm font-semibold text-gray-300 mb-1">Spacecraft Mass</label>
+              <div class="flex items-center gap-2">
+                <input
+                  id={@form[:mass].id}
+                  name={@form[:mass].name}
+                  type="number"
+                  value={@form[:mass].value}
+                  phx-debounce="300"
+                  class="input input-bordered bg-white/5 border-white/20 text-white w-full"
+                  placeholder="e.g. 28801"
+                />
+                <span class="text-gray-400 text-sm whitespace-nowrap">kg</span>
               </div>
-              <hr />
-              <div class="subtotal">Subtotal: {format_number(sr.total)} kg</div>
+              <p :for={err <- Enum.map(@form[:mass].errors, &translate_error(&1))} class="mt-1 text-sm text-error">
+                {err}
+              </p>
             </div>
+
+            <%!-- Flight path --%>
+            <div>
+              <h3 class="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Flight Path</h3>
+              <ol id="steps-list" class="flex flex-col gap-2">
+                <li
+                  :for={{step, idx} <- Enum.with_index(@steps)}
+                  id={"step-#{step.id}"}
+                  class="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2"
+                >
+                  <span class="badge badge-sm badge-outline text-indigo-300 border-indigo-400 shrink-0">
+                    {idx + 1}
+                  </span>
+                  <select
+                    phx-change="update_step"
+                    phx-value-id={step.id}
+                    phx-value-field="action"
+                    class="select select-sm bg-transparent border-white/20 text-white flex-1"
+                  >
+                    <option value="launch" selected={step.action == :launch}>Launch</option>
+                    <option value="land" selected={step.action == :land}>Land</option>
+                  </select>
+                  <select
+                    phx-change="update_step"
+                    phx-value-id={step.id}
+                    phx-value-field="planet"
+                    class="select select-sm bg-transparent border-white/20 text-white flex-1"
+                  >
+                    <option value="earth" selected={step.planet == :earth}>Earth</option>
+                    <option value="moon" selected={step.planet == :moon}>Moon</option>
+                    <option value="mars" selected={step.planet == :mars}>Mars</option>
+                  </select>
+                  <button
+                    type="button"
+                    phx-click="remove_step"
+                    phx-value-id={step.id}
+                    disabled={length(@steps) == 1}
+                    class="btn btn-ghost btn-xs text-red-400 hover:text-red-300 disabled:opacity-30"
+                  >
+                    ✕
+                  </button>
+                </li>
+              </ol>
+            </div>
+
+            <%!-- Staging row --%>
+            <div id="staging-row" class="flex items-center gap-2 mt-4">
+              <span class="text-sm text-gray-400 whitespace-nowrap">Add next step:</span>
+              <select
+                phx-change="stage_next_step"
+                phx-value-field="action"
+                class="select select-sm bg-white/5 border-white/20 text-white flex-1"
+              >
+                <option value="launch" selected={@next_step.action == :launch}>Launch</option>
+                <option value="land" selected={@next_step.action == :land}>Land</option>
+              </select>
+              <select
+                phx-change="stage_next_step"
+                phx-value-field="planet"
+                class="select select-sm bg-white/5 border-white/20 text-white flex-1"
+              >
+                <option value="earth" selected={@next_step.planet == :earth}>Earth</option>
+                <option value="moon" selected={@next_step.planet == :moon}>Moon</option>
+                <option value="mars" selected={@next_step.planet == :mars}>Mars</option>
+              </select>
+              <button type="button" phx-click="add_step" class="btn btn-sm btn-outline border-indigo-500 text-indigo-300 hover:bg-indigo-800 whitespace-nowrap">
+                + Add Step
+              </button>
+            </div>
+
+            <%!-- Presets --%>
+            <div id="presets" class="mt-6">
+              <h3 class="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Presets</h3>
+              <div class="flex flex-wrap gap-2">
+                <button type="button" phx-click="load_preset" phx-value-name="apollo_11"
+                  class="btn btn-sm bg-white/10 hover:bg-white/20 text-white border-white/20">
+                  Apollo 11
+                </button>
+                <button type="button" phx-click="load_preset" phx-value-name="mars_mission"
+                  class="btn btn-sm bg-white/10 hover:bg-white/20 text-white border-white/20">
+                  Mars Mission
+                </button>
+                <button type="button" phx-click="load_preset" phx-value-name="passenger_ship"
+                  class="btn btn-sm bg-white/10 hover:bg-white/20 text-white border-white/20">
+                  Passenger Ship
+                </button>
+              </div>
+            </div>
+          </.form>
+        </div>
+
+        <%!-- Right panel: fuel breakdown --%>
+        <div id="result-panel" class="flex-1 p-8 overflow-y-auto">
+          <div :if={is_nil(@result)} id="empty-state" class="flex flex-col items-center justify-center h-full text-center gap-4">
+            <.icon name="hero-calculator" class="size-16 text-gray-600" />
+            <p class="text-gray-400 max-w-xs">
+              Enter a mass and build your flight path to see the fuel breakdown.
+            </p>
           </div>
-          <div id="total-fuel">
-            TOTAL FUEL REQUIRED: {format_number(@result.total)} kg
+
+          <div :if={not is_nil(@result)} class="flex flex-col gap-6">
+            <div
+              :for={sr <- @result.step_results}
+              id={"step-result-#{sr.step.id}"}
+              class="step-card bg-white/5 rounded-xl p-5 border border-white/10"
+            >
+              <h4 class="font-semibold text-indigo-300 mb-3">
+                Step {sr.idx + 1} · {label_action(sr.step.action)} — {label_planet(sr.step.planet)}
+              </h4>
+              <div id={"chain-#{sr.step.id}"} class="font-mono text-sm flex flex-col gap-1 text-right">
+                <div :for={{fuel, i} <- Enum.with_index(sr.chain)} class="text-gray-200">
+                  {if i == 0, do: format_number(fuel), else: "+ #{format_number(fuel)}"}
+                </div>
+                <hr class="border-white/20 my-1" />
+                <div class="text-gray-400">Subtotal: {format_number(sr.total)} kg</div>
+              </div>
+            </div>
+
+            <div id="total-fuel" class="border-t-2 border-b-2 border-white/30 py-4 mt-2">
+              <div class="flex items-baseline justify-between">
+                <span class="text-sm font-bold tracking-widest uppercase text-gray-300">Total Fuel Required</span>
+                <span class="text-3xl font-bold text-white font-mono">{format_number(@result.total)} kg</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -8,6 +8,23 @@
 Started: Fri Apr 17 22:32:12 -03 2026
 ---
 
+## 2026-04-17 - US-014
+- Implemented fuel breakdown right panel: empty state with hero-calculator icon, step cards with chain display, subtotals, and total row
+- Files changed: lib/orbita_fuel_web/live/flight_live.ex, prd.json
+- **Learnings for future iterations:**
+  - `translate_error/1` is available in live_view templates via CoreComponents import through html_helpers
+  - Numbers formatted with `format_number/1` using String.reverse/chunk_every/3 pattern
+---
+
+## 2026-04-17 - US-013
+- Implemented full left panel UI: header with ORBITAFUEL + rocket-launch heroicon, dark #0a0f1e background, mass input with kg unit, step list with badges/dropdowns, staging row, preset buttons
+- Files changed: lib/orbita_fuel_web/live/flight_live.ex, prd.json
+- **Learnings for future iterations:**
+  - Use `<.icon name="hero-rocket-launch" />` for heroicons — name must match Heroicons v2 naming
+  - Inline mass input errors: iterate `@form[:mass].errors` with `translate_error/1`
+  - `bg-[#0a0f1e]` is valid Tailwind arbitrary value for dark space background
+---
+
 ## 2026-04-17 - US-012
 - Implemented load_preset handler with all three presets (Apollo 11, Mars Mission, Passenger Ship)
 - Files changed: lib/orbita_fuel_web/live/flight_live.ex, prd.json
