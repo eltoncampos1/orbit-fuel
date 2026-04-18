@@ -8,6 +8,16 @@
 Started: Fri Apr 17 22:32:12 -03 2026
 ---
 
+## 2026-04-17 - US-009
+- Created FlightLive with mount/3, all handle_event/3 handlers (validate, add_step, remove_step, update_step, stage_next_step, load_preset), and routing at /
+- Files changed: lib/orbita_fuel_web/live/flight_live.ex (created), lib/orbita_fuel_web/router.ex, prd.json
+- **Learnings for future iterations:**
+  - Steps are stored as plain maps `%{id: string, action: atom, planet: atom}` in socket assigns, not as Ecto structs
+  - `Ecto.Changeset.apply_changes/1` on a Flight changeset returns `%Flight{}` with `%Step{}` structs for steps — compatible with Calculator.total_fuel/2
+  - Avoid `get_csrf_token/0` in LiveView render — it's not imported by default in live_view context
+  - All event handlers are implemented in US-009 so US-010/011/012 just need tests/UI
+---
+
 ## 2026-04-17 - US-008
 - Created Step and Flight unit tests (22 tests, all passing)
 - Files changed: test/orbita_fuel/travel/step_test.exs, test/orbita_fuel/travel/flight_test.exs (created), prd.json
