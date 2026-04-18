@@ -35,9 +35,9 @@ defmodule OrbitaFuelWeb.FlightLive do
       <div class="flex flex-1 overflow-hidden">
         <%!-- Left panel: mission setup --%>
         <div class="w-full max-w-lg p-8 border-r border-white/10 overflow-y-auto flex flex-col gap-6">
+          <%!-- Mass input (inside form for validate event) --%>
           <.form id="flight-form" for={@form} phx-change="validate">
-            <%!-- Mass input --%>
-            <div class="mb-6">
+            <div class="mb-2">
               <label class="block text-sm font-semibold text-gray-300 mb-1">Spacecraft Mass</label>
               <div class="flex items-center gap-2">
                 <input
@@ -55,95 +55,94 @@ defmodule OrbitaFuelWeb.FlightLive do
                 {err}
               </p>
             </div>
+          </.form>
 
-            <%!-- Flight path --%>
-            <div>
-              <h3 class="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Flight Path</h3>
-              <ol id="steps-list" class="flex flex-col gap-2">
-                <li
-                  :for={{step, idx} <- Enum.with_index(@steps)}
-                  id={"step-#{step.id}"}
-                  class="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2"
-                >
-                  <span class="badge badge-sm badge-outline text-indigo-300 border-indigo-400 shrink-0">
-                    {idx + 1}
-                  </span>
+          <%!-- Flight path (outside form so phx-value-* params work correctly) --%>
+          <div>
+            <h3 class="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Flight Path</h3>
+            <ol id="steps-list" class="flex flex-col gap-2">
+              <li
+                :for={{step, idx} <- Enum.with_index(@steps)}
+                id={"step-#{step.id}"}
+                class="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2"
+              >
+                <span class="badge badge-sm badge-outline text-indigo-300 border-indigo-400 shrink-0">
+                  {idx + 1}
+                </span>
+                <form phx-change="update_step" id={"step-form-#{step.id}"} class="flex items-center gap-2 flex-1">
+                  <input type="hidden" name="step_id" value={step.id} />
                   <select
-                    phx-change="update_step"
-                    phx-value-id={step.id}
-                    phx-value-field="action"
+                    name="action"
                     class="select select-sm bg-transparent border-white/20 text-white flex-1"
                   >
                     <option value="launch" selected={step.action == :launch}>Launch</option>
                     <option value="land" selected={step.action == :land}>Land</option>
                   </select>
                   <select
-                    phx-change="update_step"
-                    phx-value-id={step.id}
-                    phx-value-field="planet"
+                    name="planet"
                     class="select select-sm bg-transparent border-white/20 text-white flex-1"
                   >
                     <option value="earth" selected={step.planet == :earth}>Earth</option>
                     <option value="moon" selected={step.planet == :moon}>Moon</option>
                     <option value="mars" selected={step.planet == :mars}>Mars</option>
                   </select>
-                  <button
-                    type="button"
-                    phx-click="remove_step"
-                    phx-value-id={step.id}
-                    disabled={length(@steps) == 1}
-                    class="btn btn-ghost btn-xs text-red-400 hover:text-red-300 disabled:opacity-30"
-                  >
-                    ✕
-                  </button>
-                </li>
-              </ol>
-            </div>
+                </form>
+                <button
+                  type="button"
+                  phx-click="remove_step"
+                  phx-value-id={step.id}
+                  disabled={length(@steps) == 1}
+                  class="btn btn-ghost btn-xs text-red-400 hover:text-red-300 disabled:opacity-30"
+                >
+                  ✕
+                </button>
+              </li>
+            </ol>
+          </div>
 
-            <%!-- Staging row --%>
-            <div id="staging-row" class="flex items-center gap-2 mt-4">
-              <span class="text-sm text-gray-400 whitespace-nowrap">Add next step:</span>
-              <select
-                phx-change="stage_next_step"
-                phx-value-field="action"
-                class="select select-sm bg-white/5 border-white/20 text-white flex-1"
-              >
-                <option value="launch" selected={@next_step.action == :launch}>Launch</option>
-                <option value="land" selected={@next_step.action == :land}>Land</option>
-              </select>
-              <select
-                phx-change="stage_next_step"
-                phx-value-field="planet"
-                class="select select-sm bg-white/5 border-white/20 text-white flex-1"
-              >
-                <option value="earth" selected={@next_step.planet == :earth}>Earth</option>
-                <option value="moon" selected={@next_step.planet == :moon}>Moon</option>
-                <option value="mars" selected={@next_step.planet == :mars}>Mars</option>
-              </select>
-              <button type="button" phx-click="add_step" class="btn btn-sm btn-outline border-indigo-500 text-indigo-300 hover:bg-indigo-800 whitespace-nowrap">
-                + Add Step
+          <%!-- Staging row --%>
+          <div id="staging-row" class="flex items-center gap-2">
+            <span class="text-sm text-gray-400 whitespace-nowrap">Add next step:</span>
+            <select
+              phx-change="stage_next_step"
+              phx-value-field="action"
+              class="select select-sm bg-white/5 border-white/20 text-white flex-1"
+            >
+              <option value="launch" selected={@next_step.action == :launch}>Launch</option>
+              <option value="land" selected={@next_step.action == :land}>Land</option>
+            </select>
+            <select
+              phx-change="stage_next_step"
+              phx-value-field="planet"
+              class="select select-sm bg-white/5 border-white/20 text-white flex-1"
+            >
+              <option value="earth" selected={@next_step.planet == :earth}>Earth</option>
+              <option value="moon" selected={@next_step.planet == :moon}>Moon</option>
+              <option value="mars" selected={@next_step.planet == :mars}>Mars</option>
+            </select>
+            <button type="button" phx-click="add_step" class="btn btn-sm btn-outline border-indigo-500 text-indigo-300 hover:bg-indigo-800 whitespace-nowrap">
+              + Add Step
+            </button>
+          </div>
+
+          <%!-- Presets --%>
+          <div id="presets">
+            <h3 class="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Presets</h3>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" phx-click="load_preset" phx-value-name="apollo_11"
+                class="btn btn-sm bg-white/10 hover:bg-white/20 text-white border-white/20">
+                Apollo 11
+              </button>
+              <button type="button" phx-click="load_preset" phx-value-name="mars_mission"
+                class="btn btn-sm bg-white/10 hover:bg-white/20 text-white border-white/20">
+                Mars Mission
+              </button>
+              <button type="button" phx-click="load_preset" phx-value-name="passenger_ship"
+                class="btn btn-sm bg-white/10 hover:bg-white/20 text-white border-white/20">
+                Passenger Ship
               </button>
             </div>
-
-            <%!-- Presets --%>
-            <div id="presets" class="mt-6">
-              <h3 class="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Presets</h3>
-              <div class="flex flex-wrap gap-2">
-                <button type="button" phx-click="load_preset" phx-value-name="apollo_11"
-                  class="btn btn-sm bg-white/10 hover:bg-white/20 text-white border-white/20">
-                  Apollo 11
-                </button>
-                <button type="button" phx-click="load_preset" phx-value-name="mars_mission"
-                  class="btn btn-sm bg-white/10 hover:bg-white/20 text-white border-white/20">
-                  Mars Mission
-                </button>
-                <button type="button" phx-click="load_preset" phx-value-name="passenger_ship"
-                  class="btn btn-sm bg-white/10 hover:bg-white/20 text-white border-white/20">
-                  Passenger Ship
-                </button>
-              </div>
-            </div>
-          </.form>
+          </div>
         </div>
 
         <%!-- Right panel: fuel breakdown --%>
@@ -282,13 +281,19 @@ defmodule OrbitaFuelWeb.FlightLive do
 
   @impl true
   def handle_event("update_step", params, socket) do
-    id = params["id"]
-    field = String.to_existing_atom(params["field"])
-    value = String.to_existing_atom(params["value"])
+    id = params["step_id"]
+    action = params["action"] && String.to_existing_atom(params["action"])
+    planet = params["planet"] && String.to_existing_atom(params["planet"])
 
     new_steps =
       Enum.map(socket.assigns.steps, fn step ->
-        if step.id == id, do: Map.put(step, field, value), else: step
+        if step.id == id do
+          step
+          |> then(fn s -> if action, do: Map.put(s, :action, action), else: s end)
+          |> then(fn s -> if planet, do: Map.put(s, :planet, planet), else: s end)
+        else
+          step
+        end
       end)
 
     socket =

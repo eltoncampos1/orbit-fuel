@@ -3,9 +3,21 @@
 - Travel domain lives in `lib/orbita_fuel/travel/`
 - `total_fuel/2` uses reverse accumulation: process steps in reverse, each step's mass = base_mass + accumulated fuel from later steps (rocket equation)
 - Step uses `Ecto.Enum` for :action and :planet fields within an `embedded_schema`
+- Step update events: use `<form phx-change="update_step">` with `name="step_id"` hidden input (NOT `name="id"` — causes LiveView warning)
+- phx-value-* attributes are NOT sent in render_change for select elements; only phx-click events get phx-value-*
 
 # Ralph Progress Log
 Started: Fri Apr 17 22:32:12 -03 2026
+---
+
+## 2026-04-17 - US-015
+- Created FlightLive integration tests (17 tests, all passing); also updated old PageControllerTest
+- Files changed: test/orbita_fuel_web/live/flight_live_test.exs (created), test/orbita_fuel_web/controllers/page_controller_test.exs, prd.json
+- **Learnings for future iterations:**
+  - `render_change` on a SELECT element with phx-change does NOT include phx-value-* attributes in params — only the element value is sent as query string
+  - For step update events, use a mini `<form phx-change="update_step">` with `name` attributes and a hidden `name="step_id"` input; then test with `form[phx-change='update_step']` selector
+  - NEVER use `name="id"` on hidden inputs — causes LiveView warning; use `name="step_id"` or similar
+  - Old PageControllerTest must be updated when the / route changes to a LiveView
 ---
 
 ## 2026-04-17 - US-014
