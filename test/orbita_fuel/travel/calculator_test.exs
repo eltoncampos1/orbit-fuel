@@ -83,7 +83,7 @@ defmodule OrbitaFuel.Travel.CalculatorTest do
         %Step{action: :land, planet: :earth}
       ]
 
-      assert {212161, _} = Calculator.total_fuel(75432, steps)
+      assert {212_161, _} = Calculator.total_fuel(75432, steps)
     end
 
     test "empty steps list returns {0, []}" do

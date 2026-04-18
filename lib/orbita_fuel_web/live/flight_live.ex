@@ -29,7 +29,9 @@ defmodule OrbitaFuelWeb.FlightLive do
           <span class="text-xl font-bold tracking-widest text-white">ORBITAFUEL</span>
           <span class="text-sm text-gray-400 ml-2">Interplanetary Fuel Calculator</span>
         </div>
-        <span class="text-xs font-semibold text-indigo-300 tracking-widest uppercase">NASA Challenge</span>
+        <span class="text-xs font-semibold text-indigo-300 tracking-widest uppercase">
+          NASA Challenge
+        </span>
       </header>
 
       <div class="flex flex-1 overflow-hidden">
@@ -51,7 +53,10 @@ defmodule OrbitaFuelWeb.FlightLive do
                 />
                 <span class="text-gray-400 text-sm whitespace-nowrap">kg</span>
               </div>
-              <p :for={err <- Enum.map(@form[:mass].errors, &translate_error(&1))} class="mt-1 text-sm text-error">
+              <p
+                :for={err <- Enum.map(@form[:mass].errors, &translate_error(&1))}
+                class="mt-1 text-sm text-error"
+              >
                 {err}
               </p>
             </div>
@@ -59,7 +64,9 @@ defmodule OrbitaFuelWeb.FlightLive do
 
           <%!-- Flight path (outside form so phx-value-* params work correctly) --%>
           <div>
-            <h3 class="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Flight Path</h3>
+            <h3 class="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">
+              Flight Path
+            </h3>
             <ol id="steps-list" class="flex flex-col gap-2">
               <li
                 :for={{step, idx} <- Enum.with_index(@steps)}
@@ -69,7 +76,11 @@ defmodule OrbitaFuelWeb.FlightLive do
                 <span class="badge badge-sm badge-outline text-indigo-300 border-indigo-400 shrink-0">
                   {idx + 1}
                 </span>
-                <form phx-change="update_step" id={"step-form-#{step.id}"} class="flex items-center gap-2 flex-1">
+                <form
+                  phx-change="update_step"
+                  id={"step-form-#{step.id}"}
+                  class="flex items-center gap-2 flex-1"
+                >
                   <input type="hidden" name="step_id" value={step.id} />
                   <select
                     name="action"
@@ -103,24 +114,32 @@ defmodule OrbitaFuelWeb.FlightLive do
           <%!-- Staging row --%>
           <div id="staging-row" class="flex items-center gap-2">
             <span class="text-sm text-gray-400 whitespace-nowrap">Add next step:</span>
-            <select
+            <form
               phx-change="stage_next_step"
-              phx-value-field="action"
-              class="select select-sm bg-white/5 border-white/20 text-white flex-1"
+              id="staging-form"
+              class="flex items-center gap-2 flex-1"
             >
-              <option value="launch" selected={@next_step.action == :launch}>Launch</option>
-              <option value="land" selected={@next_step.action == :land}>Land</option>
-            </select>
-            <select
-              phx-change="stage_next_step"
-              phx-value-field="planet"
-              class="select select-sm bg-white/5 border-white/20 text-white flex-1"
+              <select
+                name="action"
+                class="select select-sm bg-white/5 border-white/20 text-white flex-1"
+              >
+                <option value="launch" selected={@next_step.action == :launch}>Launch</option>
+                <option value="land" selected={@next_step.action == :land}>Land</option>
+              </select>
+              <select
+                name="planet"
+                class="select select-sm bg-white/5 border-white/20 text-white flex-1"
+              >
+                <option value="earth" selected={@next_step.planet == :earth}>Earth</option>
+                <option value="moon" selected={@next_step.planet == :moon}>Moon</option>
+                <option value="mars" selected={@next_step.planet == :mars}>Mars</option>
+              </select>
+            </form>
+            <button
+              type="button"
+              phx-click="add_step"
+              class="btn btn-sm btn-outline border-indigo-500 text-indigo-300 hover:bg-indigo-800 whitespace-nowrap"
             >
-              <option value="earth" selected={@next_step.planet == :earth}>Earth</option>
-              <option value="moon" selected={@next_step.planet == :moon}>Moon</option>
-              <option value="mars" selected={@next_step.planet == :mars}>Mars</option>
-            </select>
-            <button type="button" phx-click="add_step" class="btn btn-sm btn-outline border-indigo-500 text-indigo-300 hover:bg-indigo-800 whitespace-nowrap">
               + Add Step
             </button>
           </div>
@@ -129,16 +148,28 @@ defmodule OrbitaFuelWeb.FlightLive do
           <div id="presets">
             <h3 class="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Presets</h3>
             <div class="flex flex-wrap gap-2">
-              <button type="button" phx-click="load_preset" phx-value-name="apollo_11"
-                class="btn btn-sm bg-white/10 hover:bg-white/20 text-white border-white/20">
+              <button
+                type="button"
+                phx-click="load_preset"
+                phx-value-name="apollo_11"
+                class="btn btn-sm bg-white/10 hover:bg-white/20 text-white border-white/20"
+              >
                 Apollo 11
               </button>
-              <button type="button" phx-click="load_preset" phx-value-name="mars_mission"
-                class="btn btn-sm bg-white/10 hover:bg-white/20 text-white border-white/20">
+              <button
+                type="button"
+                phx-click="load_preset"
+                phx-value-name="mars_mission"
+                class="btn btn-sm bg-white/10 hover:bg-white/20 text-white border-white/20"
+              >
                 Mars Mission
               </button>
-              <button type="button" phx-click="load_preset" phx-value-name="passenger_ship"
-                class="btn btn-sm bg-white/10 hover:bg-white/20 text-white border-white/20">
+              <button
+                type="button"
+                phx-click="load_preset"
+                phx-value-name="passenger_ship"
+                class="btn btn-sm bg-white/10 hover:bg-white/20 text-white border-white/20"
+              >
                 Passenger Ship
               </button>
             </div>
@@ -147,7 +178,11 @@ defmodule OrbitaFuelWeb.FlightLive do
 
         <%!-- Right panel: fuel breakdown --%>
         <div id="result-panel" class="flex-1 p-8 overflow-y-auto">
-          <div :if={is_nil(@result)} id="empty-state" class="flex flex-col items-center justify-center h-full text-center gap-4">
+          <div
+            :if={is_nil(@result)}
+            id="empty-state"
+            class="flex flex-col items-center justify-center h-full text-center gap-4"
+          >
             <.icon name="hero-calculator" class="size-16 text-gray-600" />
             <p class="text-gray-400 max-w-xs">
               Enter a mass and build your flight path to see the fuel breakdown.
@@ -174,8 +209,12 @@ defmodule OrbitaFuelWeb.FlightLive do
 
             <div id="total-fuel" class="border-t-2 border-b-2 border-white/30 py-4 mt-2">
               <div class="flex items-baseline justify-between">
-                <span class="text-sm font-bold tracking-widest uppercase text-gray-300">Total Fuel Required</span>
-                <span class="text-3xl font-bold text-white font-mono">{format_number(@result.total)} kg</span>
+                <span class="text-sm font-bold tracking-widest uppercase text-gray-300">
+                  Total Fuel Required
+                </span>
+                <span class="text-3xl font-bold text-white font-mono">
+                  {format_number(@result.total)} kg
+                </span>
               </div>
             </div>
           </div>
@@ -306,9 +345,15 @@ defmodule OrbitaFuelWeb.FlightLive do
 
   @impl true
   def handle_event("stage_next_step", params, socket) do
-    field = String.to_existing_atom(params["field"] || "action")
-    value = String.to_existing_atom(params["value"] || "launch")
-    {:noreply, assign(socket, next_step: Map.put(socket.assigns.next_step, field, value))}
+    action = params["action"] && String.to_existing_atom(params["action"])
+    planet = params["planet"] && String.to_existing_atom(params["planet"])
+
+    next_step =
+      socket.assigns.next_step
+      |> then(fn s -> if action, do: Map.put(s, :action, action), else: s end)
+      |> then(fn s -> if planet, do: Map.put(s, :planet, planet), else: s end)
+
+    {:noreply, assign(socket, next_step: next_step)}
   end
 
   @impl true

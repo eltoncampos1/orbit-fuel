@@ -111,8 +111,12 @@ defmodule OrbitaFuelWeb.FlightLiveTest do
       assert has_element?(view, "button[phx-click='remove_step'][disabled]")
     end
 
-    test "update step action changes step", %{conn: conn} do
+    test "update step action changes step (with multiple steps to exercise else branch)", %{
+      conn: conn
+    } do
       {:ok, view, _html} = live(conn, "/")
+
+      view |> element("button", "+ Add Step") |> render_click()
 
       html =
         view
@@ -158,6 +162,36 @@ defmodule OrbitaFuelWeb.FlightLiveTest do
       view |> element("button", "Passenger Ship") |> render_click()
 
       assert render(view) =~ "212,161"
+    end
+  end
+
+  describe "stage_next_step" do
+    test "staging action does not add a new step", %{conn: conn} do
+      {:ok, view, _html} = live(conn, "/")
+
+      before_count =
+        view |> element("#steps-list") |> render() |> count_items("<li")
+
+      view |> element("#staging-form") |> render_change(%{action: "land"})
+
+      after_count =
+        view |> element("#steps-list") |> render() |> count_items("<li")
+
+      assert before_count == after_count
+    end
+
+    test "staging planet does not add a new step", %{conn: conn} do
+      {:ok, view, _html} = live(conn, "/")
+
+      before_count =
+        view |> element("#steps-list") |> render() |> count_items("<li")
+
+      view |> element("#staging-form") |> render_change(%{planet: "mars"})
+
+      after_count =
+        view |> element("#steps-list") |> render() |> count_items("<li")
+
+      assert before_count == after_count
     end
   end
 
