@@ -1,9 +1,28 @@
 ## Codebase Patterns
 - Calculator functions use `floor/1` (Elixir built-in) for integer truncation
 - Travel domain lives in `lib/orbita_fuel/travel/`
+- `total_fuel/2` uses reverse accumulation: process steps in reverse, each step's mass = base_mass + accumulated fuel from later steps (rocket equation)
+- Step uses `Ecto.Enum` for :action and :planet fields within an `embedded_schema`
 
 # Ralph Progress Log
 Started: Fri Apr 17 22:32:12 -03 2026
+---
+
+## 2026-04-17 - US-004
+- Implemented `OrbitaFuel.Travel.Step` embedded schema with Ecto.Enum fields, changeset, gravity/1, planet_label/1, action_label/1
+- Files changed: lib/orbita_fuel/travel/step.ex (created), prd.json
+- **Learnings for future iterations:**
+  - Step was created as a prerequisite for US-003 (total_fuel/2 requires Step.gravity/1)
+  - `embedded_schema` with `Ecto.Enum` values: `[:launch, :land]` and `[:earth, :moon, :mars]`
+---
+
+## 2026-04-17 - US-003
+- Implemented `fuel_for_step/3` and `total_fuel/2` using reverse accumulation (rocket equation)
+- Files changed: lib/orbita_fuel/travel/calculator.ex, prd.json
+- **Learnings for future iterations:**
+  - `total_fuel/2` uses REVERSE accumulation: last step uses base mass; each prior step's mass = base + all later step fuels
+  - The spec note "original spacecraft mass" is misleading — it means base mass, but accumulated later-step fuel IS added
+  - Verified: Apollo 11 = 51898, Mars Mission = 33388, Passenger Ship = 212161
 ---
 
 ## 2026-04-17 - US-002
