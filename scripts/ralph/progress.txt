@@ -6,6 +6,14 @@
 Started: Fri Apr 17 22:32:12 -03 2026
 ---
 
+## 2026-04-17 - US-002
+- Implemented `fuel_chain/3` using `Stream.unfold/2`; seed is original mass, next accumulator is each fuel value, stops when `base_fuel <= 0`
+- Files changed: lib/orbita_fuel/travel/calculator.ex, prd.json
+- **Learnings for future iterations:**
+  - `Stream.unfold(seed, fn current -> {emit_value, next_accumulator} | nil end)` — both the emitted value and next seed are the fuel value
+  - Verified against spec: `fuel_chain(28801, 9.807, :land)` → `[9278, 2960, 915, 254, 40]`
+---
+
 ## 2026-04-17 - US-001
 - Implemented `OrbitaFuel.Travel.Calculator.base_fuel/3` with clauses for :launch and :land
 - Files changed: lib/orbita_fuel/travel/calculator.ex (created), prd.json
