@@ -8,6 +8,13 @@
 Started: Fri Apr 17 22:32:12 -03 2026
 ---
 
+## 2026-04-17 - US-006
+- Added ExCoveralls dependency and configuration to mix.exs
+- Files changed: mix.exs, mix.lock, prd.json
+- **Learnings for future iterations:**
+  - `preferred_cli_env` must use keyword list syntax (not map) in mix.exs project/0
+---
+
 ## 2026-04-17 - US-005
 - Implemented `OrbitaFuel.Travel.Flight` embedded schema with mass(:float), embeds_many(:steps), changeset with validate_number and validate_length
 - Files changed: lib/orbita_fuel/travel/flight.ex (created), prd.json
