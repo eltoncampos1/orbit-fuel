@@ -8,6 +8,14 @@
 Started: Fri Apr 17 22:32:12 -03 2026
 ---
 
+## 2026-04-17 - US-008
+- Created Step and Flight unit tests (22 tests, all passing)
+- Files changed: test/orbita_fuel/travel/step_test.exs, test/orbita_fuel/travel/flight_test.exs (created), prd.json
+- **Learnings for future iterations:**
+  - Flight changeset: `cast_embed(:steps, required: true)` + `validate_length(:steps, min: 1)` both needed — required: true alone doesn't reject []
+  - Non-numeric string for mass field shows error on :mass (Ecto cast failure)
+---
+
 ## 2026-04-17 - US-007
 - Created Calculator unit tests covering all functions and edge cases (12 tests, all passing)
 - Files changed: test/orbita_fuel/travel/calculator_test.exs (created), prd.json
