@@ -8,6 +8,14 @@
 Started: Fri Apr 17 22:32:12 -03 2026
 ---
 
+## 2026-04-17 - US-007
+- Created Calculator unit tests covering all functions and edge cases (12 tests, all passing)
+- Files changed: test/orbita_fuel/travel/calculator_test.exs (created), prd.json
+- **Learnings for future iterations:**
+  - Test exact chain values (e.g. `launch Earth 28801` → `[11829, 4839, 1960, 774, 285, 84, 1]`, total=19772)
+  - `use ExUnit.Case, async: true` works fine for pure Calculator tests
+---
+
 ## 2026-04-17 - US-006
 - Added ExCoveralls dependency and configuration to mix.exs
 - Files changed: mix.exs, mix.lock, prd.json
