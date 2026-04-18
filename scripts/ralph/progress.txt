@@ -8,6 +8,14 @@
 Started: Fri Apr 17 22:32:12 -03 2026
 ---
 
+## 2026-04-17 - US-005
+- Implemented `OrbitaFuel.Travel.Flight` embedded schema with mass(:float), embeds_many(:steps), changeset with validate_number and validate_length
+- Files changed: lib/orbita_fuel/travel/flight.ex (created), prd.json
+- **Learnings for future iterations:**
+  - `cast_embed(:steps, required: true)` handles embedded step validation and propagates errors
+  - `validate_length(:steps, min: 1)` ensures at least one step
+---
+
 ## 2026-04-17 - US-004
 - Implemented `OrbitaFuel.Travel.Step` embedded schema with Ecto.Enum fields, changeset, gravity/1, planet_label/1, action_label/1
 - Files changed: lib/orbita_fuel/travel/step.ex (created), prd.json
