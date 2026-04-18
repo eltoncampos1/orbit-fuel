@@ -1,0 +1,15 @@
+## Codebase Patterns
+- Calculator functions use `floor/1` (Elixir built-in) for integer truncation
+- Travel domain lives in `lib/orbita_fuel/travel/`
+
+# Ralph Progress Log
+Started: Fri Apr 17 22:32:12 -03 2026
+---
+
+## 2026-04-17 - US-001
+- Implemented `OrbitaFuel.Travel.Calculator.base_fuel/3` with clauses for :launch and :land
+- Files changed: lib/orbita_fuel/travel/calculator.ex (created), prd.json
+- **Learnings for future iterations:**
+  - Use `floor/1` (Elixir built-in) for integer truncation — no `Float.floor` needed
+  - The travel domain directory `lib/orbita_fuel/travel/` was created fresh; all domain modules go here
+---

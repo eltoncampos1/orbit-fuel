@@ -1,0 +1,331 @@
+{
+  "project": "OrbitaFuel",
+  "branchName": "ralph/orbita-fuel",
+  "description": "Interplanetary Fuel Calculator — Phoenix 1.8/LiveView app with recursive fuel calculation, embedded schemas, real-time UI, and 100% test coverage.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Calculator — base_fuel/3",
+      "description": "As an agent, I need a pure function that computes raw (non-accumulated) fuel for a single step so the recursive chain can be built on top of it.",
+      "acceptanceCriteria": [
+        "Create lib/orbita_fuel/travel/calculator.ex",
+        "Define base_fuel(mass, gravity, :launch) returning floor(mass * gravity * 0.042 - 33)",
+        "Define base_fuel(mass, gravity, :land) returning floor(mass * gravity * 0.033 - 42)",
+        "Return value is an integer — may be negative for small masses, do NOT clamp",
+        "mix compile --warning-as-errors passes",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Calculator — fuel_chain/3",
+      "description": "As an agent, I need a lazy stream that generates the full recursive fuel chain for one step so each intermediate value is available for display.",
+      "acceptanceCriteria": [
+        "Define fuel_chain(mass, gravity, action) using Stream.unfold/2",
+        "Unfold seed is mass (the original spacecraft mass)",
+        "Each iteration calls base_fuel(current, gravity, action); current starts as mass then advances to each successive fuel value",
+        "Iteration stops (returns nil) when base_fuel result is <= 0",
+        "Returns a materialized list via Enum.to_list/1",
+        "Returns [] for mass so small that base_fuel is immediately <= 0",
+        "mix compile --warning-as-errors passes",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Calculator — fuel_for_step/3 and total_fuel/2",
+      "description": "As an agent, I need functions that aggregate fuel per step and across all steps so the LiveView can display subtotals, chains, and a grand total.",
+      "acceptanceCriteria": [
+        "Define fuel_for_step(mass, gravity, action) returning {total, chain} where chain = fuel_chain(mass, gravity, action) and total = Enum.sum(chain)",
+        "For land Earth 28801 kg: chain = [9278, 2960, 915, 254, 40], total = 13447",
+        "Define total_fuel(mass, steps) where steps is a list of %Step{} structs",
+        "For each step call fuel_for_step(mass, Step.gravity(step.planet), step.action)",
+        "Return {grand_total, per_step_results} where per_step_results is a list of {total, chain} tuples in step order",
+        "Empty steps list returns {0, []}",
+        "Each step uses the original spacecraft mass — fuel from one step does NOT carry into the next step's base mass",
+        "Apollo 11 (mass 28801, launch Earth → land Moon → launch Moon → land Earth): grand total = 51898",
+        "Mars Mission (mass 14606, launch Earth → land Mars → launch Mars → land Earth): grand total = 33388",
+        "Passenger Ship (mass 75432, launch Earth → land Moon → launch Moon → land Mars → launch Mars → land Earth): grand total = 212161",
+        "mix compile --warning-as-errors passes",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Step embedded schema",
+      "description": "As an agent, I need an embedded schema for a flight step so changesets can validate action and planet values.",
+      "acceptanceCriteria": [
+        "Create lib/orbita_fuel/travel/step.ex",
+        "embedded_schema with field :action, Ecto.Enum, values: [:launch, :land] and field :planet, Ecto.Enum, values: [:earth, :moon, :mars]",
+        "changeset/2 casts both fields and validates both are required",
+        "gravity/1 returns: :earth → 9.807, :moon → 1.62, :mars → 3.711",
+        "planet_label/1 returns: :earth → \"Earth\", :moon → \"Moon\", :mars → \"Mars\"",
+        "action_label/1 returns: :launch → \"Launch\", :land → \"Land\"",
+        "mix compile --warning-as-errors passes",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Flight embedded schema",
+      "description": "As an agent, I need an embedded schema for the full flight so changesets can validate mass and the steps list together.",
+      "acceptanceCriteria": [
+        "Create lib/orbita_fuel/travel/flight.ex",
+        "embedded_schema with field :mass, :float and embeds_many :steps, Step",
+        "changeset/2 casts :mass, validates it is required and greater_than: 0",
+        "changeset/2 casts and validates embedded steps (propagates step-level errors)",
+        "changeset/2 validates length(steps) >= 1 with validate_length(:steps, min: 1)",
+        "mix compile --warning-as-errors passes",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "ExCoveralls setup",
+      "description": "As an agent, I need ExCoveralls configured in mix.exs so 100% coverage can be verified with mix coveralls.",
+      "acceptanceCriteria": [
+        "Add {:excoveralls, \"~> 0.18\", only: :test} to deps/0 in mix.exs",
+        "Add test_coverage: [tool: ExCoveralls] to project/0 in mix.exs",
+        "Add preferred_cli_env: [coveralls: :test, \"coveralls.detail\": :test, \"coveralls.html\": :test] to project/0 in mix.exs",
+        "mix deps.get resolves without conflict",
+        "mix compile --warning-as-errors passes",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Calculator unit tests",
+      "description": "As an agent, I need exhaustive tests for the Calculator module so all branches are exercised and coverage is 100%.",
+      "acceptanceCriteria": [
+        "Create test/orbita_fuel/travel/calculator_test.exs",
+        "base_fuel launch with nominal mass returns positive integer",
+        "base_fuel land with nominal mass returns positive integer",
+        "base_fuel result is negative for very small mass (not clamped, just a negative integer)",
+        "fuel_chain terminates and returns a list ending before the <= 0 value",
+        "fuel_chain for mass 1 (or any mass where first base_fuel <= 0) returns []",
+        "fuel_for_step land Earth 28801 kg — chain equals [9278, 2960, 915, 254, 40]",
+        "fuel_for_step land Earth 28801 kg — total equals 13447",
+        "fuel_for_step launch Earth 28801 kg returns expected exact value",
+        "total_fuel Apollo 11 four steps returns {51898, _}",
+        "total_fuel Mars Mission four steps returns {33388, _}",
+        "total_fuel Passenger Ship six steps returns {212161, _}",
+        "total_fuel with empty steps list returns {0, []}",
+        "mix test passes with all green",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Step and Flight unit tests",
+      "description": "As an agent, I need tests for the Step and Flight schemas covering all valid/invalid combinations and helper functions.",
+      "acceptanceCriteria": [
+        "Create test/orbita_fuel/travel/step_test.exs",
+        "Valid changeset {:launch, :earth} → valid? == true",
+        "Valid changeset {:land, :mars} → valid? == true",
+        "Missing :action → changeset error on :action",
+        "Missing :planet → changeset error on :planet",
+        "Invalid action value (e.g. \"fly\") → changeset error on :action",
+        "Invalid planet value (e.g. \"venus\") → changeset error on :planet",
+        "gravity(:earth) → 9.807",
+        "gravity(:moon) → 1.62",
+        "gravity(:mars) → 3.711",
+        "planet_label(:earth) → \"Earth\"",
+        "action_label(:launch) → \"Launch\"",
+        "Create test/orbita_fuel/travel/flight_test.exs",
+        "Valid flight (mass 28801.0, one step) → valid? == true",
+        "Valid flight (mass 28801.0, multiple steps) → valid? == true",
+        "Mass is nil → error on :mass",
+        "Mass is 0 → error on :mass",
+        "Mass is -100 → error on :mass",
+        "Mass is non-numeric string → error on :mass",
+        "Steps is empty list → error on :steps",
+        "Step with invalid action inside flight → error propagated to step level",
+        "mix test passes",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "FlightLive — mount, socket assigns, and routing",
+      "description": "As an agent, I need the LiveView mounted at / with correct initial socket assigns so the page renders with a default state.",
+      "acceptanceCriteria": [
+        "Create lib/orbita_fuel_web/live/flight_live.ex",
+        "Mount at / in router with live \"/\", FlightLive, :index",
+        "On mount: form assign is Flight changeset via to_form/1, steps assign is one default step with action :launch and planet :earth, result assign is nil, next_step assign is %{action: :launch, planet: :earth}",
+        "Steps use stable string IDs generated via :erlang.unique_integer([:positive])",
+        "Page renders without crash",
+        "mix compile --warning-as-errors passes",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "FlightLive — validate event and recalculation",
+      "description": "As an agent, I need the mass input to debounce and trigger recalculation so users get instant feedback as they type.",
+      "acceptanceCriteria": [
+        "Form element has id=\"flight-form\" and phx-change=\"validate\"",
+        "Mass input has phx-debounce=\"300\"",
+        "handle_event(\"validate\", params, socket) casts a Flight changeset from params",
+        "Recalculation runs via Calculator.total_fuel/2 when changeset is valid",
+        "result assign set to %{total: grand_total, per_step: per_step} on valid input",
+        "result assign set to nil when changeset is invalid",
+        "Inline error shown below mass input on invalid value",
+        "mix compile --warning-as-errors passes",
+        "Typecheck passes"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "FlightLive — step management events",
+      "description": "As an agent, I need add/remove/update/stage step events so users can build and modify their flight path.",
+      "acceptanceCriteria": [
+        "handle_event(\"add_step\", _params, socket) appends next_step values as a new step with a unique string ID and triggers recalculation",
+        "handle_event(\"remove_step\", %{\"id\" => id}, socket) removes the step with matching ID and triggers recalculation",
+        "handle_event(\"update_step\", params, socket) updates :action or :planet on the matching step and triggers recalculation",
+        "handle_event(\"stage_next_step\", params, socket) updates next_step assign only — does NOT add a step and does NOT recalculate",
+        "Remove button is disabled when length(steps) == 1",
+        "mix compile --warning-as-errors passes",
+        "Typecheck passes"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "FlightLive — preset event",
+      "description": "As an agent, I need preset buttons that pre-fill both mass and steps so users can quickly load reference scenarios.",
+      "acceptanceCriteria": [
+        "handle_event(\"load_preset\", %{\"name\" => name}, socket) replaces steps and mass with preset values",
+        "Apollo 11 preset: mass 28801, steps = launch Earth → land Moon → launch Moon → land Earth",
+        "Mars Mission preset: mass 14606, steps = launch Earth → land Mars → launch Mars → land Earth",
+        "Passenger Ship preset: mass 75432, steps = launch Earth → land Moon → launch Moon → land Mars → launch Mars → land Earth",
+        "Loading a preset triggers immediate recalculation",
+        "mix compile --warning-as-errors passes",
+        "Typecheck passes"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "FlightLive UI — mission setup panel",
+      "description": "As an agent, I need the left panel rendered with correct markup so users can interact with mass input, step list, staging row, and presets.",
+      "acceptanceCriteria": [
+        "Header shows app name ORBITAFUEL, rocket-launch heroicon, tagline \"Interplanetary Fuel Calculator\", right-aligned label \"NASA Challenge\"",
+        "Page background uses dark space theme (#0a0f1e or equivalent dark Tailwind class)",
+        "Mass input: label \"Spacecraft Mass\", type=\"number\", \"kg\" unit label adjacent, inline error on invalid",
+        "Flight path section: ordered list of step rows; each row has step number badge, action dropdown ([Launch | Land]), planet dropdown ([Earth | Moon | Mars]), remove X button",
+        "Remove button has disabled attribute when only one step exists",
+        "Staging row: label \"Add next step:\", action dropdown, planet dropdown, [+ Add Step] button",
+        "Presets section: three buttons labeled Apollo 11, Mars Mission, Passenger Ship",
+        "mix compile --warning-as-errors passes",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "FlightLive UI — fuel breakdown panel",
+      "description": "As an agent, I need the right panel to display the recursive chain and totals so users can see the full calculation breakdown.",
+      "acceptanceCriteria": [
+        "Empty state shown when result is nil: centered hero-calculator icon and text \"Enter a mass and build your flight path to see the fuel breakdown.\"",
+        "When result is set: one card per step with header \"Step N · [Action] — [Planet]\"",
+        "Each card body shows chain as vertical stack: first value plain, subsequent values prefixed with +, separator line, subtotal labeled \"Subtotal: X,XXX kg\"",
+        "Numbers are right-aligned and use monospace font",
+        "Total row: double rule separator, label TOTAL FUEL REQUIRED, large bold value (e.g. 51,898 kg)",
+        "Numbers formatted with thousands separator (comma)",
+        "Result panel updates live on every form change without page refresh",
+        "mix compile --warning-as-errors passes",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "FlightLive integration tests",
+      "description": "As an agent, I need integration tests for the LiveView so all user-visible behaviors are verified end-to-end.",
+      "acceptanceCriteria": [
+        "Create test/orbita_fuel_web/live/flight_live_test.exs",
+        "Page mounts successfully: {:ok, view, _html} with no error",
+        "has_element?(view, \"#flight-form\") is true on mount",
+        "Empty state element is present on mount",
+        "One default step row is present on mount",
+        "Valid mass 28801 entered → no error element, result panel updates",
+        "Mass 0 → inline error present",
+        "Mass -100 → inline error present",
+        "Mass cleared → inline error present",
+        "Add Step appends a new row (step count increases by 1)",
+        "Remove step reduces count by 1",
+        "Remove button has disabled attribute when only one step",
+        "Update step action via dropdown → step reflects new action",
+        "Update step planet via dropdown → step reflects new planet",
+        "Apollo 11 preset → result panel contains \"51,898\"",
+        "Mars Mission preset → result panel contains \"33,388\"",
+        "Passenger Ship preset → result panel contains \"212,161\"",
+        "Breakdown chain element is present for step 1 when result is set",
+        "mix test passes",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "Full coverage verification and precommit",
+      "description": "As an agent, I need ExCoveralls to confirm 100% coverage and mix precommit to pass clean so the implementation is complete.",
+      "acceptanceCriteria": [
+        "Run mix coveralls — all relevant modules show 100% line coverage",
+        "If any module is below 100%, add missing test cases and re-run until coverage is 100%",
+        "Run mix precommit — compile, format, all tests green, no warnings",
+        "mix precommit exits with code 0",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
