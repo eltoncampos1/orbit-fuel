@@ -8,6 +8,31 @@
 Started: Fri Apr 17 22:32:12 -03 2026
 ---
 
+## 2026-04-17 - US-012
+- Implemented load_preset handler with all three presets (Apollo 11, Mars Mission, Passenger Ship)
+- Files changed: lib/orbita_fuel_web/live/flight_live.ex, prd.json
+- **Learnings for future iterations:**
+  - Preset values are tuples {mass, [{action, planet}...]} defined in defp preset/1 clauses
+---
+
+## 2026-04-17 - US-011
+- Implemented add_step, remove_step, update_step, stage_next_step handlers; remove button disabled when steps==1
+- Files changed: lib/orbita_fuel_web/live/flight_live.ex, prd.json
+- **Learnings for future iterations:**
+  - `stage_next_step` updates only the next_step assign, no recalculation
+  - `update_step` uses `String.to_existing_atom/1` for field/value params (atoms must already exist)
+---
+
+## 2026-04-17 - US-010
+- Added mass input with phx-debounce="300", validate handler, result computation, step results panel
+- Files changed: lib/orbita_fuel_web/live/flight_live.ex, prd.json
+- **Learnings for future iterations:**
+  - Result assign structure: `%{total: grand_total, step_results: [%{step: step, idx: idx, total: t, chain: chain}]}`
+  - Avoid inline assignment in HEEx templates — precompute in assigns
+  - `compute_result/3` zips steps with per_step tuples for clean template iteration
+  - `.input` component with `phx-debounce` uses the `:rest` global passthrough
+---
+
 ## 2026-04-17 - US-009
 - Created FlightLive with mount/3, all handle_event/3 handlers (validate, add_step, remove_step, update_step, stage_next_step, load_preset), and routing at /
 - Files changed: lib/orbita_fuel_web/live/flight_live.ex (created), lib/orbita_fuel_web/router.ex, prd.json
