@@ -37,10 +37,9 @@ Fuel is itself mass, so each step recursively accumulates additional fuel until 
 | Framework   | Phoenix 1.8.1 + LiveView 1.1.0      |
 | Styling     | Tailwind CSS 4.1                    |
 | Assets      | esbuild                             |
-| Database    | PostgreSQL via Ecto (infra only)    |
 | Testing     | ExUnit + ExCoveralls (100% coverage)|
 
-> No Ecto Repo calls are made at runtime. `Flight` and `Step` use `embedded_schema` for changeset validation only — all state lives in the LiveView socket.
+> No database required. `Flight` and `Step` use `embedded_schema` for changeset validation only — all state lives in the LiveView socket.
 
 ---
 
@@ -49,7 +48,6 @@ Fuel is itself mass, so each step recursively accumulates additional fuel until 
 ### Prerequisites
 
 - Elixir >= 1.15
-- Docker & Docker Compose
 
 ### Setup
 
@@ -57,34 +55,24 @@ Fuel is itself mass, so each step recursively accumulates additional fuel until 
 make setup
 ```
 
-This will start the Postgres container, fetch dependencies, create the database, and run migrations.
-
 ### Running
 
 ```bash
-make dev
+make server
 ```
 
-This starts Postgres in Docker and launches the Phoenix server. Visit [http://localhost:4000](http://localhost:4000).
+Visit [http://localhost:4000](http://localhost:4000).
 
 ---
 
 ## Available commands
 
-| Command           | Description                              |
-|-------------------|------------------------------------------|
-| `make setup`      | Full first-run setup                     |
-| `make dev`        | Start Postgres + Phoenix server          |
-| `make up`         | Start Postgres container only            |
-| `make down`       | Stop containers                          |
-| `make server`     | Start Phoenix server (DB already up)     |
-| `make deps`       | Fetch Elixir dependencies                |
-| `make db.create`  | Create the database                      |
-| `make db.migrate` | Run pending migrations                   |
-| `make db.rollback`| Rollback last migration                  |
-| `make db.reset`   | Drop, create, and migrate                |
-| `make test`       | Run the test suite                       |
-| `make lint`       | Check formatting and run Credo           |
+| Command      | Description                   |
+|--------------|-------------------------------|
+| `make setup` | Fetch dependencies            |
+| `make server`| Start Phoenix server          |
+| `make test`  | Run the test suite            |
+| `make lint`  | Check formatting and Credo    |
 
 ---
 

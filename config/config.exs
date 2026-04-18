@@ -7,10 +7,6 @@
 # General application configuration
 import Config
 
-config :orbita_fuel,
-  ecto_repos: [OrbitaFuel.Repo],
-  generators: [timestamp_type: :utc_datetime]
-
 # Configures the endpoint
 config :orbita_fuel, OrbitaFuelWeb.Endpoint,
   url: [host: "localhost"],

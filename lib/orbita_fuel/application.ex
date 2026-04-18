@@ -9,7 +9,6 @@ defmodule OrbitaFuel.Application do
   def start(_type, _args) do
     children = [
       OrbitaFuelWeb.Telemetry,
-      OrbitaFuel.Repo,
       {DNSCluster, query: Application.get_env(:orbita_fuel, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: OrbitaFuel.PubSub},
       # Start a worker by calling: OrbitaFuel.Worker.start_link(arg)
